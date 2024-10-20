@@ -1,0 +1,46 @@
+
+baseURL = 'https://charleshuff.net/'
+languageCode = 'en-us'
+theme = 'anatole'
+
+[params]
+title = "Charles Huff"
+author = "Charles Huff"
+description = "Another blog about tech ideas."
+profilePicture = "images/profile1.jpg"
+contentratio = 0.77
+
+[[params.socialIcons]]
+icon = "fab fa-linkedin"
+title = "Linkedin"
+url = "www.linkedin.com/in/charleshuff2600"
+
+[[params.socialIcons]]
+icon = "fab fa-github"
+title = "GitHub"
+url = "https://github.com/charleshuff/"
+
+[[params.socialIcons]]
+icon = "fas fa-envelope"
+title = "e-mail"
+url = "mailto:website@charleshuff.net"
+
+[menu]
+
+  [[menu.main]]
+  name = "Home"
+  identifier = "home"
+  weight = 100
+  url = "/"
+
+  [[menu.main]]
+  name = "Posts"
+  weight = 200
+  identifier = "posts"
+  url = "/posts/"
+
+  [[menu.main]]
+  name = "About"
+  weight = 300
+  identifier = "about"
+  url = "/about/"

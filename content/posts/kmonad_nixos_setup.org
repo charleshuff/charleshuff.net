@@ -1,0 +1,7 @@
+#+title: Installing and Configuring KMonad on NixOS
+#+summary: Use configuration.nix to get KMonad working on NixOS systems.
+#+date: 2024-10-17
+If you want to use home-row modifiers or multiple layers with a keyboard then KMonad offers a solution. But, getting it working on NixOS requires a bit of extra know-how. 
+
+* How to use KMonad with NixOS
+Install KMonad and then use it. 
