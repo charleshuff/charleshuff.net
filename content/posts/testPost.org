@@ -1,0 +1,8 @@
+#+title: Test page for functionality
+#+summary: Testing the functionality of this system. 
+#+date: 2024-10-17
+This is a test article to see if this hugo system still works
+* First heading
+content
+* second heading
+content
