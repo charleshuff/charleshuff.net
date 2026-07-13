@@ -1,0 +1,649 @@
+<!doctype html>
+<html
+  dir="ltr"
+  lang="en"
+  data-theme=""
+  
+    class="html theme--light"
+  
+><head>
+  <meta charset="utf-8" /><title>
+    Charles Huff
+        |
+        WireGuard on a Kobo e-reader
+      
+
+    
+
+  </title>
+
+  <meta name="generator" content="Hugo 0.161.1"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="author" content="Charles Huff" />
+  <meta
+    name="description"
+    content="Another blog about tech ideas."
+  />
+  
+  
+        <link rel="stylesheet" href="/css/anatole.min.62f71b4e7a9364026be07711be221b7bdb977ebac636e85b7ab18bd8d1a2cd79.css" integrity="sha256-YvcbTnqTZAJr4HcRviIbe9uXfrrGNuhberGL2NGizXk=" crossorigin="anonymous" />
+      
+  <link
+    rel="stylesheet"
+    href="/css/markupHighlight.min.f8ba48d3fd92c731701d9634494275b2f2bc2ad0bea19b438feb41b25052f83b.css"
+    integrity="sha256-&#43;LpI0/2SxzFwHZY0SUJ1svK8KtC&#43;oZtDj&#43;tBslBS&#43;Ds="
+    crossorigin="anonymous"
+    type="text/css"
+  />
+  
+  
+  <link
+    rel="stylesheet"
+    href="/fontawesome/css/fontawesome.min.eabaad75d2a3bbe73cc241b49d1bb0a81c619a0095fdf7b562a68113351d6d10.css"
+    integrity="sha256-6rqtddKju&#43;c8wkG0nRuwqBxhmgCV/fe1YqaBEzUdbRA="
+    crossorigin="anonymous"
+    type="text/css"
+  />
+  
+  <link
+    rel="stylesheet"
+    href="/fontawesome/css/solid.min.8e12a5201429cf3456cf7cec43fcc253a1223599fbd1a079587adb995a4c023c.css"
+    integrity="sha256-jhKlIBQpzzRWz3zsQ/zCU6EiNZn70aB5WHrbmVpMAjw="
+    crossorigin="anonymous"
+    type="text/css"
+  />
+  
+  <link
+    rel="stylesheet"
+    href="/fontawesome/css/regular.min.81539f32e0d482c0ac985e83d400c5b77aee57f779c00080431b7da424ee7419.css"
+    integrity="sha256-gVOfMuDUgsCsmF6D1ADFt3ruV/d5wACAQxt9pCTudBk="
+    crossorigin="anonymous"
+    type="text/css"
+  />
+  
+  <link
+    rel="stylesheet"
+    href="/fontawesome/css/brands.min.83d56d716557b07e7c50ea76c0a6806208ce9e51bc0e3d54508c356260211f22.css"
+    integrity="sha256-g9VtcWVXsH58UOp2wKaAYgjOnlG8Dj1UUIw1YmAhHyI="
+    crossorigin="anonymous"
+    type="text/css"
+  />
+  
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+
+  <link rel="canonical" href="https://charleshuff.net/posts/wireguard-on-a-kobo/" />
+  
+  
+  
+  
+  <script
+    type="text/javascript"
+    src="/js/anatole-header.min.f9132794301a01ff16550ed66763482bd848f62243d278f5e550229a158bfd32.js"
+    integrity="sha256-&#43;RMnlDAaAf8WVQ7WZ2NIK9hI9iJD0nj15VAimhWL/TI="
+    crossorigin="anonymous"
+  ></script>
+
+  
+    
+    
+    <script
+      type="text/javascript"
+      src="/js/anatole-theme-switcher.min.8724ddf9268dee451060f191961647573c7f592fbccc6d858746236b3f915813.js"
+      integrity="sha256-hyTd&#43;SaN7kUQYPGRlhZHVzx/WS&#43;8zG2Fh0Yjaz&#43;RWBM="
+      crossorigin="anonymous"
+    ></script>
+  
+
+  
+
+  
+
+  
+
+
+  
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="WireGuard on a Kobo e-reader">
+  <meta name="twitter:description" content="This post describes installing WireGuard on a Kobo e-reader running KOReader, so that all of the device&#39;s traffic is routed through a WireGuard tunnel.
+Device inventory The Kobo runs Linux on the following:
+Kernel 4.9.56 (no in-kernel WireGuard; that requires 5.6&#43;). armv7l, hard-float. glibc 2.11.1. BusyBox userland. No iptables, no bash, no wg-quick. /dev/net/tun exists. /mnt/onboard is a vfat user partition. Unix permissions do not persist across remount, but binaries execute normally. Because the kernel does not include WireGuard, the only viable implementation is wireguard-go (userspace) plus the wg control tool.">
+
+
+
+  
+  <meta property="og:url" content="https://charleshuff.net/posts/wireguard-on-a-kobo/">
+  <meta property="og:site_name" content="Charles Huff">
+  <meta property="og:title" content="WireGuard on a Kobo e-reader">
+  <meta property="og:description" content="This post describes installing WireGuard on a Kobo e-reader running KOReader, so that all of the device&#39;s traffic is routed through a WireGuard tunnel.
+Device inventory The Kobo runs Linux on the following:
+Kernel 4.9.56 (no in-kernel WireGuard; that requires 5.6&#43;). armv7l, hard-float. glibc 2.11.1. BusyBox userland. No iptables, no bash, no wg-quick. /dev/net/tun exists. /mnt/onboard is a vfat user partition. Unix permissions do not persist across remount, but binaries execute normally. Because the kernel does not include WireGuard, the only viable implementation is wireguard-go (userspace) plus the wg control tool.">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+
+
+
+  
+  
+  <script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "articleSection": "posts",
+        "name": "WireGuard on a Kobo e-reader",
+        "headline": "WireGuard on a Kobo e-reader",
+        "alternativeHeadline": "",
+        "description": "
+      
+        \u003cp\u003e\nThis post describes installing WireGuard on a Kobo e-reader running KOReader, so that all of the device\u0026#39;s traffic is routed through a WireGuard tunnel.\u003c\/p\u003e\n\u003cdiv id=\u0022outline-container-headline-1\u0022 class=\u0022outline-2\u0022\u003e\n\u003ch2 id=\u0022headline-1\u0022\u003e\nDevice inventory\n\u003c\/h2\u003e\n\u003cdiv id=\u0022outline-text-headline-1\u0022 class=\u0022outline-text-2\u0022\u003e\n\u003cp\u003e\nThe Kobo runs Linux on the following:\u003c\/p\u003e\n\u003cul\u003e\n\u003cli\u003eKernel 4.9.56 (no in-kernel WireGuard; that requires 5.6\u002b).\u003c\/li\u003e\n\u003cli\u003earmv7l, hard-float.\u003c\/li\u003e\n\u003cli\u003eglibc 2.11.1.\u003c\/li\u003e\n\u003cli\u003eBusyBox userland. No \u003ccode\u003eiptables\u003c\/code\u003e, no \u003ccode\u003ebash\u003c\/code\u003e, no \u003ccode\u003ewg-quick\u003c\/code\u003e.\u003c\/li\u003e\n\u003cli\u003e\u003ccode\u003e\/dev\/net\/tun\u003c\/code\u003e exists.\u003c\/li\u003e\n\u003cli\u003e\u003ccode\u003e\/mnt\/onboard\u003c\/code\u003e is a vfat user partition. Unix permissions do not persist across remount, but binaries execute normally.\u003c\/li\u003e\n\u003c\/ul\u003e\n\u003cp\u003eBecause the kernel does not include WireGuard, the only viable implementation is \u003ccode\u003ewireguard-go\u003c\/code\u003e (userspace) plus the \u003ccode\u003ewg\u003c\/code\u003e control tool.\u003c\/p\u003e
+
+
+      
+
+
+    ",
+        "license": "",
+        
+        "inLanguage": "\"en-us\"",
+        "isFamilyFriendly": "true",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/charleshuff.net\/posts\/wireguard-on-a-kobo\/"
+        },
+        "author" : {
+            "@type": "Person",
+            "name": "Charles Huff"
+        },
+        "creator" : {
+            "@type": "Person",
+            "name": "Charles Huff"
+        },
+        "accountablePerson" : {
+            "@type": "Person",
+            "name": "Charles Huff"
+        },
+        "copyrightHolder" : {
+            "@type": "Person",
+            "name": "Charles Huff"
+        },
+        "dateCreated": "0001-01-01T00:00:00.00Z",
+        "datePublished": "0001-01-01T00:00:00.00Z",
+        "dateModified": "0001-01-01T00:00:00.00Z",
+        "publisher":{
+            "@type":"Organization",
+            "name": "Charles Huff",
+            "url": "https://charleshuff.net/",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "https:\/\/charleshuff.net\/favicon-32x32.png",
+                "width":"32",
+                "height":"32"
+            }
+        },
+        "image": 
+      [
+      ]
+
+    ,
+        "url" : "https:\/\/charleshuff.net\/posts\/wireguard-on-a-kobo\/",
+        "wordCount" : "993",
+        "genre" : [ ],
+        "keywords" : [ ]
+    }
+  </script>
+
+
+
+
+  
+  
+  
+</head>
+<body class="body">
+    <div class="wrapper">
+      <aside
+        
+          class="wrapper__sidebar"
+        
+      ><div class="sidebar">
+  <div
+    class="sidebar__content 
+      animated fadeInDown
+    "
+  >
+    <div class="sidebar__introduction">
+      <img
+        class="sidebar__introduction-profileimage"
+        src="/images/profile1.jpg"
+        alt="profile picture"
+      />
+      
+        <div class="sidebar__introduction-title">
+          <a href="/">Charles Huff</a>
+        </div>
+      
+      <div class="sidebar__introduction-description">
+        <p>Another blog about tech ideas.</p>
+      </div>
+    </div>
+    <ul class="sidebar__list">
+      
+        <li class="sidebar__list-item">
+          <a
+            href="www.linkedin.com/in/charleshuff2600"
+            target="_blank"
+            rel="noopener me"
+            aria-label="Linkedin"
+            title="Linkedin"
+          >
+            <i class="fab fa-linkedin fa-2x" aria-hidden="true"></i>
+          </a>
+        </li>
+      
+        <li class="sidebar__list-item">
+          <a
+            href="https://github.com/charleshuff/"
+            target="_blank"
+            rel="noopener me"
+            aria-label="GitHub"
+            title="GitHub"
+          >
+            <i class="fab fa-github fa-2x" aria-hidden="true"></i>
+          </a>
+        </li>
+      
+        <li class="sidebar__list-item">
+          <a
+            href="mailto:website@charleshuff.net"
+            target="_blank"
+            rel="noopener me"
+            aria-label="e-mail"
+            title="e-mail"
+          >
+            <i class="fas fa-envelope fa-2x" aria-hidden="true"></i>
+          </a>
+        </li>
+      
+    </ul>
+  </div><footer class="footer footer__sidebar">
+  <ul
+    class="footer__list 
+      animated fadeInDown
+    "
+  >
+    <li class="footer__item">
+      &copy;
+      
+        Charles Huff
+        2026
+      
+    </li>
+    
+  </ul>
+</footer>
+  
+  <script
+    type="text/javascript"
+    src="/js/medium-zoom.min.9531b4a2217a70c5a1fce89c1f81c9ebbdd586708fcd4130b417320c7230c8d6.js"
+    integrity="sha256-lTG0oiF6cMWh/OicH4HJ673VhnCPzUEwtBcyDHIwyNY="
+    crossorigin="anonymous"
+  ></script></div>
+</aside>
+      <main
+        
+          class="wrapper__main"
+        
+      >
+        <header class="header"><div
+  class="
+    animated fadeInDown
+  "
+>
+  <a role="button" class="navbar-burger" data-target="navMenu" aria-label="menu" aria-expanded="false">
+    <span aria-hidden="true" class="navbar-burger__line"></span>
+    <span aria-hidden="true" class="navbar-burger__line"></span>
+    <span aria-hidden="true" class="navbar-burger__line"></span>
+  </a>
+  <nav class="nav">
+    <ul class="nav__list" id="navMenu">
+      
+      
+        
+        
+          <li class="nav__list-item">
+            
+            <a
+              
+              href="/"
+              
+              title=""
+              >Home</a
+            >
+          </li>
+        
+
+      
+        
+        
+          <li class="nav__list-item">
+            
+            <a
+              
+              href="/posts/"
+              
+              title=""
+              >Posts</a
+            >
+          </li>
+        
+
+      
+        
+        
+          <li class="nav__list-item">
+            
+            <a
+              
+              href="/about/"
+              
+              title=""
+              >About</a
+            >
+          </li>
+        
+
+      
+    </ul>
+    <ul class="nav__list nav__list--end">
+      
+      
+        <li class="nav__list-item">
+          <div class="themeswitch">
+            <a title="Switch Theme">
+              <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a>
+          </div>
+        </li>
+      
+    </ul>
+  </nav>
+</div>
+</header>
+  <div
+    class="post 
+      animated fadeInDown
+    "
+  >
+    
+    <div class="post__content">
+      
+        <h1>WireGuard on a Kobo E-Reader</h1>
+      
+      
+<p>
+This post describes installing WireGuard on a Kobo e-reader running KOReader, so that all of the device&#39;s traffic is routed through a WireGuard tunnel.</p>
+<div id="outline-container-headline-1" class="outline-2">
+<h2 id="headline-1">
+Device inventory
+</h2>
+<div id="outline-text-headline-1" class="outline-text-2">
+<p>
+The Kobo runs Linux on the following:</p>
+<ul>
+<li>Kernel 4.9.56 (no in-kernel WireGuard; that requires 5.6+).</li>
+<li>armv7l, hard-float.</li>
+<li>glibc 2.11.1.</li>
+<li>BusyBox userland. No <code>iptables</code>, no <code>bash</code>, no <code>wg-quick</code>.</li>
+<li><code>/dev/net/tun</code> exists.</li>
+<li><code>/mnt/onboard</code> is a vfat user partition. Unix permissions do not persist across remount, but binaries execute normally.</li>
+</ul>
+<p>Because the kernel does not include WireGuard, the only viable implementation is <code>wireguard-go</code> (userspace) plus the <code>wg</code> control tool.</p>
+</div>
+</div>
+<div id="outline-container-headline-2" class="outline-2">
+<h2 id="headline-2">
+SSH access
+</h2>
+<div id="outline-text-headline-2" class="outline-text-2">
+<p>
+KOReader ships a bundled <code>dropbear</code> SSH server at <code>/mnt/onboard/.adds/koreader/dropbear</code>. The stock Kobo openssh service is disabled by default.</p>
+<p>
+Installing an authorized key at <code>/root/.ssh/authorized_keys</code> did not work. This build of dropbear uses relative paths for its host keys and authorized-keys file, resolved against its working directory <code>/mnt/onboard/.adds/koreader/</code>. The correct location is:</p>
+<div class="src src-text">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>/mnt/onboard/.adds/koreader/settings/SSH/authorized_keys</span></span></code></pre></div>
+</div>
+<p>
+Copying the public key there enabled key-based SSH login as <code>root</code>.</p>
+<p>
+Note: the <code>-n</code> flag in this dropbear build means &#34;disable password checking&#34; — any password is accepted. This is a KOReader convenience, not a security feature.</p>
+</div>
+</div>
+<div id="outline-container-headline-3" class="outline-2">
+<h2 id="headline-3">
+Cross-compiling the binaries
+</h2>
+<div id="outline-text-headline-3" class="outline-text-2">
+<p>
+Both binaries were cross-compiled on a NixOS host using <code>nix-shell</code>.</p>
+<div id="outline-container-headline-4" class="outline-3">
+<h3 id="headline-4">
+wireguard-go
+</h3>
+<div id="outline-text-headline-4" class="outline-text-3">
+<p>
+Static Go build, no CGO:</p>
+<div class="src src-sh">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>nix-shell -p go --run <span style="color:#e6db74">&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    go build -trimpath -ldflags=&#34;-s -w&#34; -o wireguard-go .
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#39;</span></span></span></code></pre></div>
+</div>
+<p>
+Output: 3.1 MB statically-linked armv7l ELF.</p>
+</div>
+</div>
+<div id="outline-container-headline-5" class="outline-3">
+<h3 id="headline-5">
+wg (from wireguard-tools)
+</h3>
+<div id="outline-text-headline-5" class="outline-text-3">
+<p>
+The prebuilt <code>pkgsCross.armv7l-hf-multiplatform.wireguard-tools</code> derivation links dynamically against a glibc stored in the Nix store, which is not usable on the Kobo. Linking statically against <code>pkgsCross.armv7l-hf-multiplatform.glibc.static</code> works:</p>
+<div class="src src-sh">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>GLIBC_STATIC<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>nix-build --no-out-link <span style="color:#e6db74">&#34;&lt;nixpkgs&gt;&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -A pkgsCross.armv7l-hf-multiplatform.glibc.static<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>nix-shell -p pkgsCross.armv7l-hf-multiplatform.buildPackages.gcc --run <span style="color:#e6db74">&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  CC=armv7l-unknown-linux-gnueabihf-gcc \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  LDFLAGS=&#39;-static -L</span>$GLIBC_STATIC<span style="color:#e6db74">/lib&#39; \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    make wg
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span></span></span></code></pre></div>
+</div>
+<p>
+Output: 768 KB static armv7l binary. The linker warns that <code>getaddrinfo</code> needs a matching glibc at runtime; in practice, endpoint hostname resolution works on the device.</p>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-headline-6" class="outline-2">
+<h2 id="headline-6">
+Bring-up script
+</h2>
+<div id="outline-text-headline-6" class="outline-text-2">
+<p>
+<code>wg-quick</code> requires <code>bash</code> and <code>iptables</code>, neither of which is available on this device. A minimal replacement is written in POSIX shell using BusyBox utilities.</p>
+<p>
+For a full-tunnel configuration, the standard <code>wg-quick</code> approach is used:</p>
+<ul>
+<li>Leave the original default route in place.</li>
+<li>Add two more-specific routes covering all of <code>0.0.0.0/0</code>: <code>0.0.0.0/1 dev wg0</code> and <code>128.0.0.0/1 dev wg0</code>.</li>
+<li>Add a <code>/32</code> pin route for the WireGuard endpoint IP via the original gateway, so packets to the endpoint do not route through the tunnel itself.</li>
+</ul>
+<p>Core of the script:</p>
+<div class="src src-sh">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>ENDPOINT_IP<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>nslookup <span style="color:#e6db74">&#34;</span>$ENDPOINT_HOST<span style="color:#e6db74">&#34;</span> | awk <span style="color:#e6db74">&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  /^Name:/ { p=1; next }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  p &amp;&amp; /^Address[ :]/ { ip=$NF; sub(&#34;:.*&#34;,&#34;&#34;,ip); print ip; exit }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#39;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ORIG_GW<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>ip route show default | awk <span style="color:#e6db74">&#39;{for(i=1;i&lt;=NF;i++) if($i==&#34;via&#34;) print $(i+1)}&#39;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>ORIG_DEV<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>ip route show default | awk <span style="color:#e6db74">&#39;{for(i=1;i&lt;=NF;i++) if($i==&#34;dev&#34;) print $(i+1)}&#39;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ip route add <span style="color:#e6db74">&#34;</span>$ENDPOINT_IP<span style="color:#e6db74">&#34;</span>/32 via <span style="color:#e6db74">&#34;</span>$ORIG_GW<span style="color:#e6db74">&#34;</span> dev <span style="color:#e6db74">&#34;</span>$ORIG_DEV<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>wireguard-go -f <span style="color:#e6db74">&#34;</span>$IF<span style="color:#e6db74">&#34;</span> &lt;/dev/null &gt;<span style="color:#e6db74">&#34;</span>$STATE<span style="color:#e6db74">/wg.log&#34;</span> 2&gt;&amp;<span style="color:#ae81ff">1</span> &amp;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">while</span> <span style="color:#f92672">[</span> ! -S /var/run/wireguard/$IF.sock <span style="color:#f92672">]</span>; <span style="color:#66d9ef">do</span> sleep 0.5; <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>wg setconf <span style="color:#e6db74">&#34;</span>$IF<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$ETC<span style="color:#e6db74">/wg0.conf&#34;</span>
+</span></span><span style="display:flex;"><span>ip addr add 10.69.0.4/24 dev <span style="color:#e6db74">&#34;</span>$IF<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>ip link set mtu <span style="color:#ae81ff">1420</span> up dev <span style="color:#e6db74">&#34;</span>$IF<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ip route add 0.0.0.0/1 dev <span style="color:#e6db74">&#34;</span>$IF<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>ip route add 128.0.0.0/1 dev <span style="color:#e6db74">&#34;</span>$IF<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>cp /etc/resolv.conf /tmp/wireguard/resolv.conf.bak
+</span></span><span style="display:flex;"><span>printf <span style="color:#e6db74">&#39;nameserver 10.69.0.1\n&#39;</span> &gt; /etc/resolv.conf</span></span></code></pre></div>
+</div>
+<p>
+A companion <code>wg-down</code> script reverses each step: removes routes, restores <code>resolv.conf</code>, deletes the interface, and terminates <code>wireguard-go</code>.</p>
+<div id="outline-container-headline-7" class="outline-3">
+<h3 id="headline-7">
+wireguard-go daemonization
+</h3>
+<div id="outline-text-headline-7" class="outline-text-3">
+<p>
+Running <code>wireguard-go wg0</code> without the foreground flag caused the process to exit with status 1 and no output. The Linux banner it prints (&#34;kernel has first-class support…&#34;) is unconditional and not a real failure indicator.</p>
+<p>
+Foreground mode (<code>-f</code>) worked reliably. The daemonization path in Go re-execs the binary via <code>os.StartProcess</code>, which fails on this device — possibly related to executing from vfat or to file-descriptor inheritance. The workaround is to run <code>wireguard-go -f</code> and background it from the shell:</p>
+<div class="src src-sh">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>wireguard-go -f <span style="color:#e6db74">&#34;</span>$IF<span style="color:#e6db74">&#34;</span> &lt;/dev/null &gt;<span style="color:#e6db74">&#34;</span>$LOG<span style="color:#e6db74">&#34;</span> 2&gt;&amp;<span style="color:#ae81ff">1</span> &amp;</span></span></code></pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-headline-8" class="outline-2">
+<h2 id="headline-8">
+Persistence
+</h2>
+<div id="outline-text-headline-8" class="outline-text-2">
+<p>
+Two components: a menu-driven kill switch via NickelMenu, and an auto-start watchdog launched from KOReader&#39;s start script.</p>
+<div id="outline-container-headline-9" class="outline-3">
+<h3 id="headline-9">
+NickelMenu entries
+</h3>
+<div id="outline-text-headline-9" class="outline-text-3">
+<p>
+Config file at <code>/mnt/onboard/.adds/nm/wireguard</code>:</p>
+<div class="src src-text">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>menu_item:main:WireGuard - Connect:cmd_spawn:quiet:/mnt/onboard/.adds/wireguard/bin/wg-up --full
+</span></span><span style="display:flex;"><span>menu_item:main:WireGuard - Disconnect:cmd_spawn:quiet:/mnt/onboard/.adds/wireguard/bin/wg-down
+</span></span><span style="display:flex;"><span>menu_item:main:WireGuard - Enable auto-start:cmd_spawn:quiet:touch /mnt/onboard/.adds/wireguard/autostart.enabled
+</span></span><span style="display:flex;"><span>menu_item:main:WireGuard - Disable auto-start:cmd_spawn:quiet:rm -f /mnt/onboard/.adds/wireguard/autostart.enabled</span></span></code></pre></div>
+</div>
+<p>
+Note: NickelMenu labels must not contain <code>:</code>. The colon is the field separator, and any label containing one produces a parse error that disables the entire NM menu, including entries provided by other packages.</p>
+</div>
+</div>
+<div id="outline-container-headline-10" class="outline-3">
+<h3 id="headline-10">
+Watchdog
+</h3>
+<div id="outline-text-headline-10" class="outline-text-3">
+<p>
+A polling script at <code>/mnt/onboard/.adds/wireguard/bin/wg-watchdog.sh</code> checks every 15 seconds for two conditions: the <code>autostart.enabled</code> flag file exists, and a default route via <code>wlan0</code> is present. When both are true and <code>wg0</code> is not up, it runs <code>wg-up --full</code>. When wifi goes away, it runs <code>wg-down</code>.</p>
+</div>
+</div>
+<div id="outline-container-headline-11" class="outline-3">
+<h3 id="headline-11">
+Boot hook
+</h3>
+<div id="outline-text-headline-11" class="outline-text-3">
+<p>
+The watchdog is launched from <code>/mnt/onboard/.adds/koreader/koreader.sh</code>. An initial attempt to hook it into <code>/etc/init.d/ssh</code> did not work: that init script exits early when the stock Kobo sshd is disabled, so the appended snippet was never reached.</p>
+<p>
+Snippet added after <code>koreader.sh</code>&#39;s relocalize-to-tmp block:</p>
+<div class="src src-sh">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>WG_WATCHDOG<span style="color:#f92672">=</span>/mnt/onboard/.adds/wireguard/bin/wg-watchdog.sh
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -x <span style="color:#e6db74">&#34;</span>$WG_WATCHDOG<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> ! pgrep -f wg-watchdog<span style="color:#ae81ff">\.</span>sh &gt;/dev/null 2&gt;&amp;1; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    setsid <span style="color:#e6db74">&#34;</span>$WG_WATCHDOG<span style="color:#e6db74">&#34;</span> &lt;/dev/null &gt;/dev/null 2&gt;&amp;<span style="color:#ae81ff">1</span> &amp;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span></span></span></code></pre></div>
+</div>
+<ul>
+<li><code>setsid</code> starts the watchdog in its own session so it survives KOReader exiting.</li>
+<li>The <code>pgrep</code> check prevents double-launching.</li>
+</ul>
+<p>Consequence: WireGuard auto-connects only after KOReader has been launched at least once since boot. On this device, KOReader is the primary reader, so this is acceptable.</p>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-headline-12" class="outline-2">
+<h2 id="headline-12">
+Layout on the device
+</h2>
+<div id="outline-text-headline-12" class="outline-text-2">
+<ul>
+<li><code>/mnt/onboard/.adds/wireguard/bin/wireguard-go</code> — 3.1 MB static armv7 Go binary.</li>
+<li><code>/mnt/onboard/.adds/wireguard/bin/wg</code> — 768 KB static armv7 C binary.</li>
+<li><code>/mnt/onboard/.adds/wireguard/bin/wg-up</code>, <code>wg-down</code> — POSIX shell scripts.</li>
+<li><code>/mnt/onboard/.adds/wireguard/bin/wg-watchdog.sh</code> — polling script.</li>
+<li><code>/mnt/onboard/.adds/wireguard/etc/wg0.conf</code> — peer configuration.</li>
+<li><code>/mnt/onboard/.adds/wireguard/autostart.enabled</code> — flag file consumed by the watchdog.</li>
+<li><code>/mnt/onboard/.adds/nm/wireguard</code> — NickelMenu entries.</li>
+<li><code>/mnt/onboard/.adds/koreader/koreader.sh</code> — patched to launch the watchdog.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-headline-13" class="outline-2">
+<h2 id="headline-13">
+Notes on process
+</h2>
+<div id="outline-text-headline-13" class="outline-text-2">
+<ul>
+<li>NickelMenu label restrictions are documented but easy to miss. A single malformed entry disables the whole menu, which on this device also disables the ability to launch KOReader, which also disables SSH. Recovery required mounting the device via USB.</li>
+<li>The correct boot hook location depended on which SSH service is in use. Testing across a reboot before adding any UI-critical changes would have caught this earlier.</li>
+<li>The <code>wireguard-go</code> daemonization failure was worked around rather than diagnosed. The root cause is unclear.</li>
+<li><code>nix-shell</code> with <code>pkgsCross</code> provided a working cross-compile pipeline with minimal setup. <code>pkgsCross.&lt;target&gt;.glibc.static</code> is worth knowing about; <code>pkgsCross.&lt;target&gt;.pkgsStatic.&lt;package&gt;</code> triggers a full toolchain rebuild and is not a shortcut.</li>
+</ul>
+</div>
+</div>
+</div>
+    <div class="post__footer">
+      
+
+      
+    </div>
+
+    
+  </div>
+
+      </main>
+    </div><footer class="footer footer__base">
+  <ul
+    class="footer__list 
+      animated fadeInDown
+    "
+  >
+    <li class="footer__item">
+      &copy;
+      
+        Charles Huff
+        2026
+      
+    </li>
+    
+  </ul>
+</footer>
+  
+  <script
+    type="text/javascript"
+    src="/js/medium-zoom.min.9531b4a2217a70c5a1fce89c1f81c9ebbdd586708fcd4130b417320c7230c8d6.js"
+    integrity="sha256-lTG0oiF6cMWh/OicH4HJ673VhnCPzUEwtBcyDHIwyNY="
+    crossorigin="anonymous"
+  ></script></body>
+</html>
