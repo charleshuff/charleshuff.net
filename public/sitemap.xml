@@ -3,13 +3,16 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://charleshuff.net/</loc>
+    <lastmod>2026-07-12T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://charleshuff.net/posts/</loc>
+    <lastmod>2026-07-12T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://charleshuff.net/posts/wireguard-on-a-kobo/</loc>
+    <lastmod>2026-07-12T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://charleshuff.net/categories/</loc>
   </url><url>
-    <loc>https://charleshuff.net/posts/</loc>
-  </url><url>
     <loc>https://charleshuff.net/tags/</loc>
-  </url><url>
-    <loc>https://charleshuff.net/posts/wireguard-on-a-kobo/</loc>
   </url>
 </urlset>

@@ -1,4 +1,6 @@
 #+TITLE: WireGuard on a Kobo e-reader
+#+DATE: 2026-07-12
+#+SUMMARY: Installing WireGuard on a Kobo e-reader running KOReader so all device traffic is routed through a WireGuard tunnel.
 #+OPTIONS: toc:nil num:nil
 
 This post describes installing WireGuard on a Kobo e-reader running KOReader, so that all of the device's traffic is routed through a WireGuard tunnel.

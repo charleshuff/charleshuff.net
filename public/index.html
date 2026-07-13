@@ -341,24 +341,7 @@
           <h3><a href="/posts/wireguard-on-a-kobo/">WIREGUARD ON A KOBO E-READER</a></h3>
         
         
-          <p><p>
-This post describes installing WireGuard on a Kobo e-reader running KOReader, so that all of the device&#39;s traffic is routed through a WireGuard tunnel.</p>
-<div id="outline-container-headline-1" class="outline-2">
-<h2 id="headline-1">
-Device inventory
-</h2>
-<div id="outline-text-headline-1" class="outline-text-2">
-<p>
-The Kobo runs Linux on the following:</p>
-<ul>
-<li>Kernel 4.9.56 (no in-kernel WireGuard; that requires 5.6+).</li>
-<li>armv7l, hard-float.</li>
-<li>glibc 2.11.1.</li>
-<li>BusyBox userland. No <code>iptables</code>, no <code>bash</code>, no <code>wg-quick</code>.</li>
-<li><code>/dev/net/tun</code> exists.</li>
-<li><code>/mnt/onboard</code> is a vfat user partition. Unix permissions do not persist across remount, but binaries execute normally.</li>
-</ul>
-<p>Because the kernel does not include WireGuard, the only viable implementation is <code>wireguard-go</code> (userspace) plus the <code>wg</code> control tool.</p></p>
+          <p>Installing WireGuard on a Kobo e-reader running KOReader so all device traffic is routed through a WireGuard tunnel.</p>
         
         </div>
 
@@ -368,7 +351,7 @@ The Kobo runs Linux on the following:</p>
         <span class="post__footer-date"
           >
             
-              Mon, Jan 1, 0001
+              Sun, Jul 12, 2026
             
 
           </span
