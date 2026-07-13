@@ -1,0 +1,171 @@
+#+TITLE: WireGuard on a Kobo e-reader
+#+OPTIONS: toc:nil num:nil
+
+This post describes installing WireGuard on a Kobo e-reader running KOReader, so that all of the device's traffic is routed through a WireGuard tunnel.
+
+* Device inventory
+
+The Kobo runs Linux on the following:
+
+- Kernel 4.9.56 (no in-kernel WireGuard; that requires 5.6+).
+- armv7l, hard-float.
+- glibc 2.11.1.
+- BusyBox userland. No ~iptables~, no ~bash~, no ~wg-quick~.
+- ~/dev/net/tun~ exists.
+- ~/mnt/onboard~ is a vfat user partition. Unix permissions do not persist across remount, but binaries execute normally.
+
+Because the kernel does not include WireGuard, the only viable implementation is ~wireguard-go~ (userspace) plus the ~wg~ control tool.
+
+* SSH access
+
+KOReader ships a bundled ~dropbear~ SSH server at ~/mnt/onboard/.adds/koreader/dropbear~. The stock Kobo openssh service is disabled by default.
+
+Installing an authorized key at ~/root/.ssh/authorized_keys~ did not work. This build of dropbear uses relative paths for its host keys and authorized-keys file, resolved against its working directory ~/mnt/onboard/.adds/koreader/~. The correct location is:
+
+#+begin_src text
+/mnt/onboard/.adds/koreader/settings/SSH/authorized_keys
+#+end_src
+
+Copying the public key there enabled key-based SSH login as ~root~.
+
+Note: the ~-n~ flag in this dropbear build means "disable password checking" — any password is accepted. This is a KOReader convenience, not a security feature.
+
+* Cross-compiling the binaries
+
+Both binaries were cross-compiled on a NixOS host using ~nix-shell~.
+
+** wireguard-go
+
+Static Go build, no CGO:
+
+#+begin_src sh
+nix-shell -p go --run '
+  CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 \
+    go build -trimpath -ldflags="-s -w" -o wireguard-go .
+'
+#+end_src
+
+Output: 3.1 MB statically-linked armv7l ELF.
+
+** wg (from wireguard-tools)
+
+The prebuilt ~pkgsCross.armv7l-hf-multiplatform.wireguard-tools~ derivation links dynamically against a glibc stored in the Nix store, which is not usable on the Kobo. Linking statically against ~pkgsCross.armv7l-hf-multiplatform.glibc.static~ works:
+
+#+begin_src sh
+GLIBC_STATIC=$(nix-build --no-out-link "<nixpkgs>" \
+  -A pkgsCross.armv7l-hf-multiplatform.glibc.static)
+
+nix-shell -p pkgsCross.armv7l-hf-multiplatform.buildPackages.gcc --run "
+  CC=armv7l-unknown-linux-gnueabihf-gcc \
+  LDFLAGS='-static -L$GLIBC_STATIC/lib' \
+    make wg
+"
+#+end_src
+
+Output: 768 KB static armv7l binary. The linker warns that ~getaddrinfo~ needs a matching glibc at runtime; in practice, endpoint hostname resolution works on the device.
+
+* Bring-up script
+
+~wg-quick~ requires ~bash~ and ~iptables~, neither of which is available on this device. A minimal replacement is written in POSIX shell using BusyBox utilities.
+
+For a full-tunnel configuration, the standard ~wg-quick~ approach is used:
+
+- Leave the original default route in place.
+- Add two more-specific routes covering all of ~0.0.0.0/0~: ~0.0.0.0/1 dev wg0~ and ~128.0.0.0/1 dev wg0~.
+- Add a ~/32~ pin route for the WireGuard endpoint IP via the original gateway, so packets to the endpoint do not route through the tunnel itself.
+
+Core of the script:
+
+#+begin_src sh
+ENDPOINT_IP=$(nslookup "$ENDPOINT_HOST" | awk '
+  /^Name:/ { p=1; next }
+  p && /^Address[ :]/ { ip=$NF; sub(":.*","",ip); print ip; exit }
+')
+
+ORIG_GW=$(ip route show default | awk '{for(i=1;i<=NF;i++) if($i=="via") print $(i+1)}')
+ORIG_DEV=$(ip route show default | awk '{for(i=1;i<=NF;i++) if($i=="dev") print $(i+1)}')
+
+ip route add "$ENDPOINT_IP"/32 via "$ORIG_GW" dev "$ORIG_DEV"
+
+wireguard-go -f "$IF" </dev/null >"$STATE/wg.log" 2>&1 &
+while [ ! -S /var/run/wireguard/$IF.sock ]; do sleep 0.5; done
+
+wg setconf "$IF" "$ETC/wg0.conf"
+ip addr add 10.69.0.4/24 dev "$IF"
+ip link set mtu 1420 up dev "$IF"
+
+ip route add 0.0.0.0/1 dev "$IF"
+ip route add 128.0.0.0/1 dev "$IF"
+
+cp /etc/resolv.conf /tmp/wireguard/resolv.conf.bak
+printf 'nameserver 10.69.0.1\n' > /etc/resolv.conf
+#+end_src
+
+A companion ~wg-down~ script reverses each step: removes routes, restores ~resolv.conf~, deletes the interface, and terminates ~wireguard-go~.
+
+** wireguard-go daemonization
+
+Running ~wireguard-go wg0~ without the foreground flag caused the process to exit with status 1 and no output. The Linux banner it prints ("kernel has first-class support...") is unconditional and not a real failure indicator.
+
+Foreground mode (~-f~) worked reliably. The daemonization path in Go re-execs the binary via ~os.StartProcess~, which fails on this device — possibly related to executing from vfat or to file-descriptor inheritance. The workaround is to run ~wireguard-go -f~ and background it from the shell:
+
+#+begin_src sh
+wireguard-go -f "$IF" </dev/null >"$LOG" 2>&1 &
+#+end_src
+
+* Persistence
+
+Two components: a menu-driven kill switch via NickelMenu, and an auto-start watchdog launched from KOReader's start script.
+
+** NickelMenu entries
+
+Config file at ~/mnt/onboard/.adds/nm/wireguard~:
+
+#+begin_src text
+menu_item:main:WireGuard - Connect:cmd_spawn:quiet:/mnt/onboard/.adds/wireguard/bin/wg-up --full
+menu_item:main:WireGuard - Disconnect:cmd_spawn:quiet:/mnt/onboard/.adds/wireguard/bin/wg-down
+menu_item:main:WireGuard - Enable auto-start:cmd_spawn:quiet:touch /mnt/onboard/.adds/wireguard/autostart.enabled
+menu_item:main:WireGuard - Disable auto-start:cmd_spawn:quiet:rm -f /mnt/onboard/.adds/wireguard/autostart.enabled
+#+end_src
+
+Note: NickelMenu labels must not contain ~:~. The colon is the field separator, and any label containing one produces a parse error that disables the entire NM menu, including entries provided by other packages.
+
+** Watchdog
+
+A polling script at ~/mnt/onboard/.adds/wireguard/bin/wg-watchdog.sh~ checks every 15 seconds for two conditions: the ~autostart.enabled~ flag file exists, and a default route via ~wlan0~ is present. When both are true and ~wg0~ is not up, it runs ~wg-up --full~. When wifi goes away, it runs ~wg-down~.
+
+** Boot hook
+
+The watchdog is launched from ~/mnt/onboard/.adds/koreader/koreader.sh~. An initial attempt to hook it into ~/etc/init.d/ssh~ did not work: that init script exits early when the stock Kobo sshd is disabled, so the appended snippet was never reached.
+
+Snippet added after ~koreader.sh~'s relocalize-to-tmp block:
+
+#+begin_src sh
+WG_WATCHDOG=/mnt/onboard/.adds/wireguard/bin/wg-watchdog.sh
+if [ -x "$WG_WATCHDOG" ] && ! pgrep -f wg-watchdog\.sh >/dev/null 2>&1; then
+    setsid "$WG_WATCHDOG" </dev/null >/dev/null 2>&1 &
+fi
+#+end_src
+
+- ~setsid~ starts the watchdog in its own session so it survives KOReader exiting.
+- The ~pgrep~ check prevents double-launching.
+
+Consequence: WireGuard auto-connects only after KOReader has been launched at least once since boot. On this device, KOReader is the primary reader, so this is acceptable.
+
+* Layout on the device
+
+- ~/mnt/onboard/.adds/wireguard/bin/wireguard-go~ — 3.1 MB static armv7 Go binary.
+- ~/mnt/onboard/.adds/wireguard/bin/wg~ — 768 KB static armv7 C binary.
+- ~/mnt/onboard/.adds/wireguard/bin/wg-up~, ~wg-down~ — POSIX shell scripts.
+- ~/mnt/onboard/.adds/wireguard/bin/wg-watchdog.sh~ — polling script.
+- ~/mnt/onboard/.adds/wireguard/etc/wg0.conf~ — peer configuration.
+- ~/mnt/onboard/.adds/wireguard/autostart.enabled~ — flag file consumed by the watchdog.
+- ~/mnt/onboard/.adds/nm/wireguard~ — NickelMenu entries.
+- ~/mnt/onboard/.adds/koreader/koreader.sh~ — patched to launch the watchdog.
+
+* Notes on process
+
+- NickelMenu label restrictions are documented but easy to miss. A single malformed entry disables the whole menu, which on this device also disables the ability to launch KOReader, which also disables SSH. Recovery required mounting the device via USB.
+- The correct boot hook location depended on which SSH service is in use. Testing across a reboot before adding any UI-critical changes would have caught this earlier.
+- The ~wireguard-go~ daemonization failure was worked around rather than diagnosed. The root cause is unclear.
+- ~nix-shell~ with ~pkgsCross~ provided a working cross-compile pipeline with minimal setup. ~pkgsCross.<target>.glibc.static~ is worth knowing about; ~pkgsCross.<target>.pkgsStatic.<package>~ triggers a full toolchain rebuild and is not a shortcut.
